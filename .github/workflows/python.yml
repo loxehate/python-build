@@ -1,0 +1,41 @@
+name: Python CI/CD Workflow
+
+on:
+  push:
+    branches: [ main ] # 监听 main 分支 push 事件
+
+jobs:
+  develop_build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11"]
+    steps:
+      - name: 拉取最新提交的代码
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+  
+      - name: 打包python项目
+        run: |
+          cd app
+          pyinstaller --onefile --noconsole qdrant-exporter.py
+
+      - name: 读取打包生成的 python 文件名
+        id: get_python
+        run: |
+          PYTHON_PATH=$(ls app/dist/qdrant-exporter | grep -v 'original-' | head -n 1)
+          echo "PYTHON_PATH=$PYTHON_PATH" >> $GITHUB_ENV
+
+      - name: 生成 GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: qdrant-exporter
+          tag_name: latest
+          files: ${{ env.PYTHON_PATH }}
+          token: ${{ secrets.Release_TOKEN }}
