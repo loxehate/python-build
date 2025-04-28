@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.13.2"]
     steps:
       - name: 拉取最新提交的代码
         uses: actions/checkout@v4
@@ -20,15 +20,22 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
   
-      - name: 打包python项目
+      - name: 下载python依赖
         run: |
           cd app
-          pyinstaller --onefile --noconsole qdrant-exporter.py
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+
+      - name: 打包python文件
+        run: |
+          cd app
+          pyinstaller --onefile qdrant-exporter.py
 
       - name: 读取打包生成的 python 文件名
         id: get_python
         run: |
-          PYTHON_PATH=$(ls app/dist/qdrant-exporter | grep -v 'original-' | head -n 1)
+          PYTHON_PATH=$(ls app/dist | grep -v 'original-' | head -n 1)
           echo "PYTHON_PATH=$PYTHON_PATH" >> $GITHUB_ENV
 
       - name: 生成 GitHub Release
