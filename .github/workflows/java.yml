@@ -1,0 +1,43 @@
+name: Python CI/CD Workflow
+
+on:
+  push:
+    branches: [ main ] # 监听 main 分支 push 事件
+
+jobs:
+  develop_build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取最新提交的代码
+        uses: actions/checkout@v4
+
+      - name: 设置jdk
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+          cache: 'maven'
+  
+      - name: 查看 Maven 版本
+        run: mvn -v
+
+      - name: 项目打包
+        run: cd backend && mvn -B package -Plocal -f pom.xml
+
+      - name: 读取打包生成的 JAR 文件名
+        id: get_jar
+        run: |
+          JAR_PATH=$(ls backend/target/*.jar | grep -v 'original-' | head -n 1)
+          JAR_NAME=$(basename $JAR_PATH)
+          echo "JAR_NAME=$JAR_NAME" >> $GITHUB_ENV
+          echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
+          echo "找到打包文件: $JAR_NAME"
+
+      - name: 生成 GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ env.JAR_NAME }}
+          tag_name: latest
+          files: ${{ env.JAR_PATH }}
+          token: ${{ secrets.Release_TOKEN }}
