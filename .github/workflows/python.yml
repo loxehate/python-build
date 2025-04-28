@@ -35,7 +35,7 @@ jobs:
       - name: 读取打包生成的 python 文件名
         id: get_python
         run: |
-          PYTHON_PATH=$(ls app/dist | grep -v 'original-' | head -n 1)
+          PYTHON_PATH=$(ls app/dist/qdrant-exporter | grep -v 'original-' | head -n 1)
           echo "PYTHON_PATH=$PYTHON_PATH" >> $GITHUB_ENV
 
       - name: 生成 GitHub Release
