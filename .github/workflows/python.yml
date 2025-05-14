@@ -30,19 +30,20 @@ jobs:
       - name: 打包python文件
         run: |
           cd app
-          pyinstaller --onefile qdrant-exporter.py
+          pyinstaller --onefile *.py
 
       - name: 读取打包生成的 python 文件名
         id: get_python
         run: |
-          PYTHON_PATH=$(ls app/dist/qdrant-exporter | grep -v 'original-' | head -n 1)
+          cp app/dist/ai-app app/dist/ai-app.exe
+          PYTHON_PATH=$(ls app/dist/ai-app | grep -v 'original-' | head -n 1)
           echo "PYTHON_PATH=$PYTHON_PATH" >> $GITHUB_ENV
 
       - name: 生成 GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          name: qdrant-exporter
+          name: ai-app
           tag_name: latest
           files: ${{ env.PYTHON_PATH }}
           token: ${{ secrets.Release_TOKEN }}
